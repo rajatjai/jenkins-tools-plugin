@@ -1,0 +1,11 @@
+target
+work
+*.ipr
+*.iml
+*.iws
+/.project
+/.classpath
+/.settings
+/Makefile
+.idea
+/bin/
