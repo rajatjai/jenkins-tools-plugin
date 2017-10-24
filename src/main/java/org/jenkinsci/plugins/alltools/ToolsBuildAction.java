@@ -2,13 +2,15 @@ package org.jenkinsci.plugins.alltools;
 
 
 import java.io.IOException;
-
+import java.util.List;
+import java.util.Map;
 
 import hudson.model.AbstractBuild;
 import hudson.model.HealthReport;
 
 import org.jenkinsci.plugins.alltools.config.ToolsConfig;
 import org.jenkinsci.plugins.alltools.config.ToolsConfigSeverityEvaluation;
+import org.jenkinsci.plugins.alltools.model.ReportType;
 import org.jenkinsci.plugins.alltools.util.AbstractToolsBuildAction;
 import org.jenkinsci.plugins.alltools.util.ToolsBuildHealthEvaluator;
 import org.jenkinsci.plugins.alltools.Messages;
@@ -20,7 +22,7 @@ public class ToolsBuildAction extends AbstractToolsBuildAction {
 
     public static final String URL_NAME = "toolsResult";
 
-    private ToolsResult result;
+    private List<ToolsResult> result;
 
     /** 
      * The health report percentage.
@@ -29,10 +31,10 @@ public class ToolsBuildAction extends AbstractToolsBuildAction {
      */
     private int healthReportPercentage;
 
-    public ToolsBuildAction(AbstractBuild<?, ?> owner, ToolsResult result,
+    public ToolsBuildAction(AbstractBuild<?, ?> owner, List<ToolsResult> resultList,
             int healthReportPercentage) {
         super(owner);
-        this.result = result;
+        this.result = resultList;
         this.healthReportPercentage = healthReportPercentage;
     }
 
@@ -52,7 +54,7 @@ public class ToolsBuildAction extends AbstractToolsBuildAction {
         return getUrlName();
     }
 
-    public ToolsResult getResult() {
+    public List<ToolsResult> getResult() {
         return this.result;
     }
 

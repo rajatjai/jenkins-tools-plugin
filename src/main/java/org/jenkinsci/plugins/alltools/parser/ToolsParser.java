@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.alltools.model.Error.Location;
 import org.jenkinsci.plugins.alltools.model.ErrorData;
 import org.jenkinsci.plugins.alltools.model.Errors;
 import org.jenkinsci.plugins.alltools.model.RefinedErrors;
+import org.jenkinsci.plugins.alltools.model.ReportType;
 import org.jenkinsci.plugins.alltools.model.Results;
 import org.jenkinsci.plugins.alltools.model.ToolErrors;
 import org.jenkinsci.plugins.alltools.model.Tools;
@@ -28,7 +29,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -39,8 +42,9 @@ public class ToolsParser implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Gson gson = new GsonBuilder().create();
 
-	public ToolsReport parse(final File file, BuildListener listener) throws IOException {
+	public Map<ReportType, ToolsReport> parse(final File file, BuildListener listener) throws IOException {
 
+		Map<ReportType, ToolsReport> toolsReportMap = new HashMap<ReportType, ToolsReport>();
 		if (file == null) {
 			throw new IllegalArgumentException("File input is mandatory.");
 		}
@@ -50,15 +54,15 @@ public class ToolsParser implements Serializable {
 		}
 		if (file.getName().contains("Refined")) {
 			ToolsLogger.log(listener,"Parsing refined errors from file : " + file.getAbsolutePath());
-			return parseRefinedErrors(file, listener);
+			toolsReportMap.put(ReportType.REFINED_ERRORS, parseRefinedErrors(file, listener));
 		} else if (file.getName().contains("Merged")) {
 			ToolsLogger.log(listener,"Parsing merged errors from file : " + file.getAbsolutePath());
-			return parseMergedErrors(file, listener);
+			toolsReportMap.put(ReportType.MERGED_ERRORS, parseMergedErrors(file, listener));
 		} else if (file.getName().contains("Tool")) {
 			ToolsLogger.log(listener,"Parsing all tools errors from file : " + file.getAbsolutePath());
-			return parseAllToolsErrors(file, listener);
+			toolsReportMap.put(ReportType.TOOLS_ERRORS, parseAllToolsErrors(file, listener));
 		}
-		return new ToolsReport();
+		return toolsReportMap;
 		
 	
 	}
@@ -71,6 +75,7 @@ public class ToolsParser implements Serializable {
 		String toolname = toolErrors.get(0).getToolname();
 		List<ErrorData> errorList = toolErrors.get(0).getErrorList();
 		ToolsReport report = getToolsReport(listener, toolname, errorList);
+		report.setType(ReportType.TOOLS_ERRORS.name());
 		ToolsLogger.log(listener,"Parsing all tools errors file done");
 		return report;
 	}
@@ -80,6 +85,7 @@ public class ToolsParser implements Serializable {
 	private ToolsReport parseMergedErrors(File file, BuildListener listener) throws JsonIOException, JsonSyntaxException, FileNotFoundException {
 		List<ErrorData> mergedErrors = Parser.parseMergedErrors(gson, file.getAbsolutePath());
 		ToolsReport report = getToolsReport(listener, "", mergedErrors);
+		report.setType(ReportType.MERGED_ERRORS.name());
 		ToolsLogger.log(listener,"Parsing merged errors file done");
 		return report;
 	}
@@ -118,6 +124,7 @@ public class ToolsParser implements Serializable {
 		ToolsReport report = new ToolsReport();
 		ToolsLogger.log(listener, "getting report..");
 		report = getReportVersion2(results);
+		report.setType(ReportType.REFINED_ERRORS.name());
 		ToolsLogger.log(listener,"Parsing refined errors file done");
 		return report;
 	}

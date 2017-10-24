@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.alltools;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jenkinsci.plugins.alltools.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -10,7 +13,7 @@ import hudson.model.Run;
 import hudson.plugins.view.dashboard.DashboardPortlet;
 
 /**
- * Dashboard portlet that shows a sortable table with jobs and Cppcheck
+ * Dashboard portlet that shows a sortable table with jobs and tools
  * statistics per severity type.
  * 
  * @author Michal Turek
@@ -28,30 +31,31 @@ public class ToolsTablePortlet extends DashboardPortlet {
     }
 
     /**
-     * Get latest available Cppcheck statistics of a job.
+     * Get latest available tools statistics of a job.
      * 
      * @param job
      *            the job
      * @return the statistics, always non-null value
      */
-    public ToolsStatistics getStatistics(Job<?, ?> job) {
+    public List<ToolsStatistics> getStatistics(Job<?, ?> job) {
         Run<?, ?> build = job.getLastBuild();
-
+        List<ToolsStatistics> toolsStatisticsList = new ArrayList<ToolsStatistics>();
         while(build != null){
             ToolsBuildAction action = build.getAction(ToolsBuildAction.class);
 
             if (action != null) {
-                ToolsResult result = action.getResult();
-
-                if(result != null) {
-                    return result.getStatistics();
-                }
+                List<ToolsResult> result = action.getResult();
+                for (ToolsResult toolsResult : result) {
+                	if(toolsResult != null) {
+                		toolsStatisticsList.add(toolsResult.getStatistics());
+                	}
+				}
             }
 
             build = build.getPreviousBuild();
         }
 
-        return new ToolsStatistics();
+        return toolsStatisticsList;
     }
 
     /**

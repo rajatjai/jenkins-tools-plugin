@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.alltools;
 
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
 
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -72,8 +73,8 @@ public class ToolsProjectAction extends AbstractToolsProjectAction {
                 if (action == null || action.getResult() == null) {
                     continue;
                 }
-                ToolsResult result = action.getResult();
-                if (result == null)
+                List<ToolsResult> result = action.getResult();
+                if (result.isEmpty())
                     continue;
 
                 return true;
@@ -135,7 +136,7 @@ public class ToolsProjectAction extends AbstractToolsProjectAction {
              a = a.getPreviousResult(), ++numBuilds) {
 
             ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(a.getOwner());
-            ToolsStatistics statistics = a.getResult().getStatistics();
+            ToolsStatistics statistics = a.getResult().get(0).getStatistics();//TODO: something constructive
 
             // error
             if (configGraph.isDisplayErrorSeverity())

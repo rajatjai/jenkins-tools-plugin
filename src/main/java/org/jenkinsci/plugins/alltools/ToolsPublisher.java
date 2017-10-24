@@ -15,6 +15,9 @@ import hudson.tasks.Recorder;
 import org.jenkinsci.plugins.alltools.config.ToolsConfig;
 import org.jenkinsci.plugins.alltools.config.ToolsConfigGraph;
 import org.jenkinsci.plugins.alltools.config.ToolsConfigSeverityEvaluation;
+import org.jenkinsci.plugins.alltools.model.ReportType;
+import org.jenkinsci.plugins.alltools.model.ToolErrors;
+import org.jenkinsci.plugins.alltools.model.ToolsFile;
 import org.jenkinsci.plugins.alltools.model.ToolsWorkspaceFile;
 import org.jenkinsci.plugins.alltools.util.ToolsBuildResultEvaluator;
 import org.jenkinsci.plugins.alltools.util.ToolsLogger;
@@ -24,7 +27,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author Gregory Boissinot
@@ -130,16 +138,16 @@ public class ToolsPublisher extends Recorder {
 
             ToolsParserResult parser = new ToolsParserResult(listener,
             		expandedPattern, toolsConfig.isIgnoreBlankFiles());
-            ToolsReport toolsReport;
+            Map<ReportType, ToolsReport> toolsReportMap;
             try {
-                toolsReport = build.getWorkspace().act(parser);
+                toolsReportMap = build.getWorkspace().act(parser);
             } catch (Exception e) {
                 ToolsLogger.log(listener, "Error on tools analysis: " + e);
                 build.setResult(Result.FAILURE);
                 return false;
             }
 
-            if (toolsReport == null) {
+            if (toolsReportMap == null) {
                 // Check if we're configured to allow not having a report
                 if (toolsConfig.getAllowNoReport()) {
                     return true;
@@ -149,25 +157,48 @@ public class ToolsPublisher extends Recorder {
                 }
             }
 
+            ToolsConfigSeverityEvaluation severityEvaluation
+            = toolsConfig.getConfigSeverityEvaluation();
+
+            List<ToolsFile> allErrorFilesList = new ArrayList<ToolsFile>();
+            List<ToolsResult> resultList = new ArrayList<ToolsResult>();
+            List<Result> allBuildResults = new ArrayList<Result>();
+            int totalHealthReportPercentage = 0;
+            for(Entry<ReportType, ToolsReport> toolsReport: toolsReportMap.entrySet()) {
+            	//Get all results
+            	ToolsResult result = new ToolsResult(toolsReport.getKey().name(), toolsReport.getValue().getStatistics(), build);
+            	resultList.add(result);
+
+            	// Evaluate buildResult for all types of tool results
+            	Result buildResult = new ToolsBuildResultEvaluator().evaluateBuildResult(
+            			listener, result.getNumberErrorsAccordingConfiguration(severityEvaluation, false),
+            			result.getNumberErrorsAccordingConfiguration(severityEvaluation, true),
+            			severityEvaluation);
+            	allBuildResults.add(buildResult);
+            	
+            	//Get health report percentage
+            	totalHealthReportPercentage += ToolsBuildAction.computeHealthReportPercentage(result, severityEvaluation);
+            	//Get all error files
+            	allErrorFilesList.addAll(toolsReport.getValue().getAllErrors());
+            }
+            
             ToolsSourceContainer toolsSourceContainer
                     = new ToolsSourceContainer(listener, build.getWorkspace(),
-                            build.getModuleRoot(), toolsReport.getAllErrors());
+                            build.getModuleRoot(), allErrorFilesList);
 
-            ToolsResult result = new ToolsResult(toolsReport.getStatistics(), build);
-            ToolsConfigSeverityEvaluation severityEvaluation
-                    = toolsConfig.getConfigSeverityEvaluation();
-
-            Result buildResult = new ToolsBuildResultEvaluator().evaluateBuildResult(
-                    listener, result.getNumberErrorsAccordingConfiguration(severityEvaluation, false),
-                    result.getNumberErrorsAccordingConfiguration(severityEvaluation, true),
-                    severityEvaluation);
-
-            if (buildResult != Result.SUCCESS) {
-                build.setResult(buildResult);
+            Result combinedBuildResult = Result.SUCCESS;
+            for(Result buildResult: allBuildResults) {
+            	
+            	if (buildResult != Result.SUCCESS) {
+            		combinedBuildResult = buildResult;
+            		break;
+            	}
             }
-
-            ToolsBuildAction buildAction = new ToolsBuildAction(build, result,
-                    ToolsBuildAction.computeHealthReportPercentage(result, severityEvaluation));
+            
+            if (combinedBuildResult != Result.SUCCESS) {
+            	build.setResult(combinedBuildResult);
+            }
+            ToolsBuildAction buildAction = new ToolsBuildAction(build, resultList, totalHealthReportPercentage);
 
             build.addAction(buildAction);
 

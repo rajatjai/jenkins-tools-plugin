@@ -17,7 +17,8 @@ import java.util.Set;
 public class ToolsReport implements Serializable {
 
     private String version;
-
+    private String type;
+    
     private transient List<ToolsFile> allErrors = new ArrayList<ToolsFile>();
     private transient Set<String> versions = new HashSet<String>();
 
@@ -31,7 +32,21 @@ public class ToolsReport implements Serializable {
     private List<ToolsFile> falseAlarmSeverityList = new ArrayList<ToolsFile>();
 
 
-    public String getVersion() {
+    /**
+	 * @return the type
+	 */
+	public String getType() {
+		return type;
+	}
+
+	/**
+	 * @param type the type to set
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getVersion() {
         return version;
     }
 

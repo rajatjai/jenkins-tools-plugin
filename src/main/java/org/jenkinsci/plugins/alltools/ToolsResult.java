@@ -54,6 +54,12 @@ public class ToolsResult implements Serializable {
     private ToolsStatistics statistics;
 
     /**
+     * The type of report.
+     * Can be MERGED, REFINED or TOOLS from ReportType enum
+     */
+	private String type;
+
+    /**
      * Constructor.
      * 
      * @param statistics
@@ -63,7 +69,8 @@ public class ToolsResult implements Serializable {
      * 
      * @since 1.15
      */
-    public ToolsResult(ToolsStatistics statistics, AbstractBuild<?, ?> owner) {
+    public ToolsResult(String resultType, ToolsStatistics statistics, AbstractBuild<?, ?> owner) {
+    	this.type = resultType;
         this.statistics = statistics;
         this.owner = owner;
     }
@@ -113,7 +120,15 @@ public class ToolsResult implements Serializable {
         return owner;
     }
 
-    public ToolsSourceContainer getCppcheckSourceContainer() {
+    /**
+	 * @return the type
+	 */
+    @Exported
+	public String getType() {
+		return type;
+	}
+
+	public ToolsSourceContainer getCppcheckSourceContainer() {
         return lazyLoadSourceContainer();
     }
 
@@ -213,12 +228,17 @@ public class ToolsResult implements Serializable {
      */
     public ToolsResult getPreviousResult() {
         ToolsBuildAction previousAction = getPreviousAction();
-        ToolsResult previousResult = null;
+        List<ToolsResult> previousResultList = null;
         if (previousAction != null) {
-            previousResult = previousAction.getResult();
+            previousResultList = previousAction.getResult();
+            for (ToolsResult toolsResult : previousResultList) {
+				if (toolsResult.getType() == this.type) {
+					return toolsResult;
+				}
+			}
         }
 
-        return previousResult;
+        return null;
     }
 
     /**
