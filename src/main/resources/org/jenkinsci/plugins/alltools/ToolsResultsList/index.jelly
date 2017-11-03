@@ -1,0 +1,25 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout norefresh="true" title="${%Tools Results}">
+        <st:include it="${it.owner}" page="sidepanel.jelly"/>
+        <l:main-panel>
+
+            <h1>${%Tools Results}</h1>
+
+            <h2>${%Summary}</h2>
+
+			
+            <j:forEach var="jvar_result" items="${it.result}" indexVar="jvar_i">  
+                <j:set var="type" value="${jvar_result.type}"/>
+                <h3>${type}</h3>
+            	<j:set var="stat" value="${jvar_result.statistics}"/>
+    	    	<j:set var="diff" value="${jvar_result.diff}"/>
+            	<st:include page="/org/jenkinsci/plugins/alltools/ToolsResultsList/statistics.jelly"/>
+	            <j:if test="${stat.numberTotal != 0}">
+    	            <st:include page="details.jelly"/>
+        	    </j:if>
+            </j:forEach>
+            
+
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

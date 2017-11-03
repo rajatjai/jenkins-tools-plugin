@@ -10,8 +10,9 @@
     #cppcheckStatistics .number { text-align: right; }
     </style>
 
-    <table class="pane sortable" id="cppcheckStatistics"  style="display:inline-block">
-		<!--<caption><div><a href="${urlName}/${type}">${type}</a></div></caption>-->
+    <table class="pane sortable" id="cppcheckStatistics"  style="float:left;">
+		<caption><div>${type}</div></caption> 
+    	<!-- <caption><div><a href="${type}">${type}</a></div></caption> -->
     
         <thead>
             <tr>
