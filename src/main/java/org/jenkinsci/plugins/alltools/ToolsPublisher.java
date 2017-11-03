@@ -156,6 +156,7 @@ public class ToolsPublisher extends Recorder {
                     return false;
                 }
             }
+            ToolsLogger.log(listener, "Tools report map retrieved.." + toolsReportMap.size() + "files data");
 
             ToolsConfigSeverityEvaluation severityEvaluation
             = toolsConfig.getConfigSeverityEvaluation();
@@ -165,9 +166,11 @@ public class ToolsPublisher extends Recorder {
             List<Result> allBuildResults = new ArrayList<Result>();
             int totalHealthReportPercentage = 0;
             for(Entry<ReportType, ToolsReport> toolsReport: toolsReportMap.entrySet()) {
+
             	//Get all results
             	ToolsResult result = new ToolsResult(toolsReport.getKey().name(), toolsReport.getValue().getStatistics(), build);
             	resultList.add(result);
+            	ToolsLogger.log(listener, "Tools report type = " + toolsReport.getKey() + " , total errors = " + result.getStatistics().getNumberTotal());
 
             	// Evaluate buildResult for all types of tool results
             	Result buildResult = new ToolsBuildResultEvaluator().evaluateBuildResult(

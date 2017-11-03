@@ -185,7 +185,7 @@ public class ToolsResult implements Serializable {
      *            comma separated list of states (will be transformed to uppercase)
      * @return the parsed value or null if input is null
      */
-    private Set<ToolsDiffState> parseStatesFilter(String states) {
+    protected Set<ToolsDiffState> parseStatesFilter(String states) {
         if (states == null) {
             return null;
         }
@@ -213,7 +213,7 @@ public class ToolsResult implements Serializable {
      * @return the parsed value or default value on error
      * @see Integer#parseInt(String)
      */
-    private int parseIntWithDefault(String str, int defaultValue) {
+    protected int parseIntWithDefault(String str, int defaultValue) {
         try {
             return Integer.parseInt(str);
         } catch(NumberFormatException e) {
@@ -232,6 +232,7 @@ public class ToolsResult implements Serializable {
         if (previousAction != null) {
             previousResultList = previousAction.getResult();
             for (ToolsResult toolsResult : previousResultList) {
+            	System.out.println("I am of type = " + toolsResult.getType());
 				if (toolsResult.getType() == this.type) {
 					return toolsResult;
 				}
@@ -261,6 +262,7 @@ public class ToolsResult implements Serializable {
      */
     public ToolsStatistics getDiff(){
         ToolsStatistics current = getStatistics();
+        System.out.println("getting previous result..");
         ToolsResult previousResult = getPreviousResult();
 
         if(previousResult == null) {
@@ -394,6 +396,7 @@ public class ToolsResult implements Serializable {
     public Collection<ToolsWorkspaceFile> diffCurrentAndPrevious(
             Set<ToolsDiffState> filter) {
         ToolsSourceContainer cur = getCppcheckSourceContainer();
+        System.out.println("checking diff of current and previous..");
         ToolsResult prevResult = getPreviousResult();
         List<ToolsWorkspaceFile> curValues
                 = new ArrayList<ToolsWorkspaceFile>(cur.getInternalMap().values());
